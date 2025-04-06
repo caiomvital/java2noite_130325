@@ -7,11 +7,11 @@ import model.Compromisso;
 public interface CompromissoDAO {
 
 	
-	void inserir(Compromisso compromisso);
+	void inserir();
 	Compromisso localizarPorId(int id);
 	List<Compromisso> listarPorContato(int contatoId);
-	void atualizar(Compromisso compromisso);
-	void excluir(Compromisso compromisso);
+	void atualizar(int id);
+	void excluir(int id);
 	List<Compromisso> listarTodos();
 	
 }

@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -16,48 +18,29 @@ public class CompromissoCRUD {
 
 	private static Scanner scan = new Scanner(System.in);
 
-	public static void adicionarCompromisso() {
+	public static void adicionarCompromisso(Compromisso compromisso) {
 		Connection conexao = ConexaoJDBC.iniciarConexao();
 
 		if (conexao != null) {
 
 			try {
 
-				System.out.println("Informe o ID do contato: ");
-				int id = scan.nextInt(); scan.nextLine();
-				
-				
-				Contato contato = ContatoCRUD.localizarContatoPorId(id);
-
-				if(contato != null) {
-					Compromisso compromisso = new Compromisso();
-					
-					System.out.println("Digite o nome do compromisso: ");
-					String nome = scan.nextLine();
-					compromisso.setNome(nome);
-					System.out.println("Digite a descrição do compromisso: ");
-					String descricao = scan.nextLine();
-					compromisso.setDescricao(descricao);
-					
-					compromisso.setContato(contato);
-
-					String sql = "INSERT INTO compromissos (nome, descricao, contato_id) VALUES (?, ?, ?)";
+					String sql = "INSERT INTO compromissos (nome, descricao, contato_id, data_hora) VALUES (?, ?, ?, ?)";
 
 					PreparedStatement ps = conexao.prepareStatement(sql);
-
+					
+					Timestamp timestamp = Timestamp.valueOf(compromisso.getDataHora());
+					
 					ps.setString(1, compromisso.getNome());
 					ps.setString(2, compromisso.getDescricao());
-					ps.setInt(3, id);
+					ps.setInt(3, compromisso.getContato().getId());
+					ps.setTimestamp(4, timestamp);
+
 
 					ps.executeUpdate();
 
 					System.out.println("Compromisso adicionado com sucesso.");
-				} else {
-					System.out.println("Contato não existe com o ID " + id);
-				}
 				
-				
-
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
 			} finally {
@@ -86,6 +69,8 @@ public class CompromissoCRUD {
 					compromisso.setDescricao(conjuntoDeResultados.getString("descricao"));
 					int idContato = conjuntoDeResultados.getInt("contato_id");
 					compromisso.setContato(ContatoCRUD.localizarContatoPorId(idContato));
+					LocalDateTime localDateTime = conjuntoDeResultados.getTimestamp("data_hora").toLocalDateTime();
+					compromisso.setDataHora(localDateTime);
 					compromissos.add(compromisso);
 				}
 
@@ -112,7 +97,7 @@ public class CompromissoCRUD {
 				PreparedStatement ps = conexao.prepareStatement(sql);
 
 				ps.setInt(1, contato.getId());
-				
+
 				ResultSet conjuntoDeResultados = ps.executeQuery();
 
 				while (conjuntoDeResultados.next()) {
@@ -122,6 +107,8 @@ public class CompromissoCRUD {
 					compromisso.setDescricao(conjuntoDeResultados.getString("descricao"));
 					int idContato = conjuntoDeResultados.getInt("contato_id");
 					compromisso.setContato(ContatoCRUD.localizarContatoPorId(idContato));
+					LocalDateTime localDateTime = conjuntoDeResultados.getTimestamp("data_hora").toLocalDateTime();
+					compromisso.setDataHora(localDateTime);
 					compromissos.add(compromisso);
 				}
 
@@ -135,12 +122,11 @@ public class CompromissoCRUD {
 		}
 		return null;
 	}
-	
+
 	public static Compromisso localizarCompromissoPorId(int id) {
 		Connection conexao = ConexaoJDBC.iniciarConexao();
 		if (conexao != null) {
 			try {
-
 
 				String sql = "SELECT * FROM compromissos WHERE id = ?";
 				PreparedStatement ps = conexao.prepareStatement(sql);
@@ -156,7 +142,8 @@ public class CompromissoCRUD {
 					compromisso.setDescricao(conjuntoDeResultados.getString("descricao"));
 					int idContato = conjuntoDeResultados.getInt("contato_id");
 					compromisso.setContato(ContatoCRUD.localizarContatoPorId(idContato));
-					
+					LocalDateTime localDateTime = conjuntoDeResultados.getTimestamp("data_hora").toLocalDateTime();
+					compromisso.setDataHora(localDateTime);
 					return compromisso;
 				}
 
@@ -173,30 +160,12 @@ public class CompromissoCRUD {
 
 	}
 
-	public static void alterarCompromisso(int id) {
-		Compromisso compromisso = localizarCompromissoPorId(id);
+	public static void alterarCompromisso(Compromisso compromisso) {
 
 		if (compromisso != null) {
 			Connection conexao = ConexaoJDBC.iniciarConexao();
-			System.out.println("Informe o novo nome do compromisso: ");
-			String nome = scan.nextLine();
-			System.out.println("Informe a nova descrição do compromisso: ");
-			String descricao = scan.nextLine();
-				
-			System.out.println("Informe o ID do novo contato: ");
-			int idContato = scan.nextInt(); scan.nextLine();
-			Contato novoContato = ContatoCRUD.localizarContatoPorId(idContato);
-			
-			if(novoContato != null) {
-				compromisso.setNome(nome);
-				compromisso.setDescricao(descricao);
-				compromisso.setContato(novoContato);
-			} else {
-				System.out.println("Novo contato não encontrado.");
-			}
 
-
-			String sql = "UPDATE compromissos SET nome = ?, descricao = ?, contato_id = ? where ID = ?";
+			String sql = "UPDATE compromissos SET nome = ?, descricao = ?, contato_id = ?, data_hora = ? where ID = ?";
 
 			try {
 
@@ -204,8 +173,9 @@ public class CompromissoCRUD {
 
 				ps.setString(1, compromisso.getNome());
 				ps.setString(2, compromisso.getDescricao());
-				ps.setInt(3, idContato);
-				ps.setInt(4, id);
+				ps.setInt(3, compromisso.getContato().getId());
+				ps.setTimestamp(4, Timestamp.valueOf(compromisso.getDataHora()));
+				ps.setInt(5, compromisso.getId());
 
 				int linhasAfetadas = ps.executeUpdate();
 
@@ -221,14 +191,11 @@ public class CompromissoCRUD {
 				ConexaoJDBC.fecharConexao(conexao);
 			}
 
-		} else {
-			System.out.printf("Contato com o id %d não existe%n", id);
 		}
-
 	}
 
-	public static void removerCompromisso(int id) {
-		Compromisso compromisso = localizarCompromissoPorId(id);
+	public static void excluirCompromisso(Compromisso compromisso) {
+		
 
 		if (compromisso != null) {
 			Connection conexao = ConexaoJDBC.iniciarConexao();
@@ -239,8 +206,7 @@ public class CompromissoCRUD {
 
 				PreparedStatement ps = conexao.prepareStatement(sql);
 
-				ps.setInt(1, id);
-				
+				ps.setInt(1, compromisso.getId());
 
 				int linhasAfetadas = ps.executeUpdate();
 
@@ -256,8 +222,6 @@ public class CompromissoCRUD {
 				ConexaoJDBC.fecharConexao(conexao);
 			}
 
-		} else {
-			System.out.printf("Compromisso com o id %d não existe%n", id);
 		}
 	}
 
