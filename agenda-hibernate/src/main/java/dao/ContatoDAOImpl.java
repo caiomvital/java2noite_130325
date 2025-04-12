@@ -8,11 +8,8 @@ import utils.JPAUtil;
 
 public class ContatoDAOImpl implements ContatoDAO {
 
-	private EntityManager em;
+	private EntityManager em = JPAUtil.getEntityManager();
 	
-	public ContatoDAOImpl() {
-		this.em = JPAUtil.getEntityManager();
-	}
 	
 	
 	@Override
@@ -30,20 +27,35 @@ public class ContatoDAOImpl implements ContatoDAO {
 
 	@Override
 	public List<Contato> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+		return em
+				.createQuery("FROM Contato c ORDER BY c.id ASC", Contato.class)
+				.getResultList();
 	}
 
 	@Override
 	public void update(Contato contato) {
-		// TODO Auto-generated method stub
+		em.getTransaction().begin();
+		em.merge(contato);
+		em.getTransaction().commit();
 		
 	}
 
 	@Override
 	public void delete(int id) {
-		// TODO Auto-generated method stub
+		em.getTransaction().begin();
+		Contato contato = findById(id); 
+		em.remove(contato);
+		em.getTransaction().commit();
 		
 	}
+	
+	/*
+	 @Override
+	 public void delete(Contato contato) {
+	 em.getTransaction().begin();
+	 em.remove(contato);
+	 em.getTransaction().commit();
+	 }
+	 */
 
 }

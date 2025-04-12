@@ -3,18 +3,35 @@ package model;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
+@Entity
+@Table(name = "compromissos")
 public class Compromisso {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
+	
+	@Column(name = "nome",  nullable = false)
 	private String nome;
+	
+	@Column(name = "descricao", nullable = false)
 	private String descricao;
+	
 	@ManyToOne // estabelece o relacionamento muitos-para-um
 	@JoinColumn(name = "contato_id", referencedColumnName = "id")
 	private Contato contato;
-	private LocalDateTime dataHora;
+	
+	@Column(name = "data_hora")
+	private LocalDateTime dataHora = LocalDateTime.now();
 	
 	public Compromisso() {}
 	
@@ -23,7 +40,11 @@ public class Compromisso {
 		this.nome = nome;
 		this.descricao = descricao;
 		this.contato = contato;
+		if(dataHora == null) {
+			this.dataHora = LocalDateTime.now();
+		} else {
 		this.dataHora = dataHora;
+		}
 	}
 
 	public int getId() {
@@ -69,13 +90,13 @@ public class Compromisso {
 	@Override
 	public String toString() {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm");
-		String dataFormatada = this.dataHora.format(formatter);
+	    String dataHoraFormatada = (dataHora != null) ? dataHora.format(formatter) : "Data não disponível";
 		
 		String dados = "ID do compromisso: " + this.id;
 		dados += "\nNome do Compromisso: " + this.nome;
 		dados += "\nContato associado: " + this.contato.getNome();
 		dados += "\nDescrição do compromisso: " + this.descricao;
-		dados += "\nData/Hora: " + dataFormatada;
+		dados += "\nData/Hora: " + dataHoraFormatada;
 		dados += "\n~~~~~~~~";
 				
 		return dados;
